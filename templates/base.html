@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nutrition Scanner{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .navbar-brand {
+            font-weight: 600;
+        }
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            transform: translateY(-2px);
+        }
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .footer {
+            background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+            color: white;
+        }
+        .flash-messages {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 1000;
+            min-width: 300px;
+        }
+        .progress {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .comparison-table th {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+        /* Autocomplete styles */
+#autocomplete-results {
+    border: 1px solid #ddd;
+    border-radius: 0 0 4px 4px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.autocomplete-item {
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: left;
+    padding: 10px 15px;
+}
+
+.autocomplete-item:hover, 
+.autocomplete-item:focus {
+    background-color: #f8f9fa;
+    outline: none;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item .badge {
+    font-size: 0.7em;
+}
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top shadow">
+        <div class="container">
+            <!-- Brand/Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="bi bi-apple me-2"></i>
+                <span class="fs-4">🍎 Nutrition Scanner</span>
+            </a>
+            
+            <!-- Mobile Toggle Button -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.path == '/' else '' }}" href="/">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                    </li>
+                    
+                    <!-- Products Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="productsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-basket"></i> Products
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/#manual-lookup">
+                                <i class="bi bi-search"></i> Search Product
+                            </a></li>
+                            <li><a class="dropdown-item" href="/#qr-scanner">
+                                <i class="bi bi-qr-code-scan"></i> QR Scanner
+                            </a></li>
+                            {% if session.get('is_admin') %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/admin">
+                                <i class="bi bi-speedometer"></i> Admin Dashboard
+                            </a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    
+                    <!-- Health Tools Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="toolsDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-heart-pulse"></i> Health Tools
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">
+                                <i class="bi bi-calculator"></i> BMI Calculator
+                            </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="bi bi-graph-up"></i> Daily Tracker
+                            </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="bi bi-clipboard-check"></i> Meal Planner
+                            </a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.path == '/about' else '' }}" href="/about">
+                            <i class="bi bi-info-circle"></i> About
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.path == '/contact' else '' }}" href="/contact">
+                            <i class="bi bi-envelope"></i> Contact
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Right-side navigation (Auth & User) -->
+                <ul class="navbar-nav">
+                    <!-- Check if user is logged in -->
+                    {% if session.get('user_id') %}
+                        <!-- User is logged in - show user menu -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <div class="rounded-circle bg-light text-success d-flex align-items-center justify-content-center me-2" 
+                                     style="width: 32px; height: 32px;">
+                                    {% if session.get('is_admin') %}
+                                    <i class="bi bi-shield-check"></i>
+                                    {% else %}
+                                    <i class="bi bi-person-fill"></i>
+                                    {% endif %}
+                                </div>
+                                <span id="username">{{ session.get('user_name', 'User') }}</span>
+                                {% if session.get('is_admin') %}
+                                <span class="badge bg-danger ms-2">Admin</span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <div class="px-3 py-2">
+                                        <small class="text-muted">Signed in as</small>
+                                        <div class="fw-bold">{{ session.get('user_email', 'user@example.com') }}</div>
+                                        {% if session.get('is_admin') %}
+                                        <span class="badge bg-danger mt-1">Administrator</span>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/profile">
+                                    <i class="bi bi-person"></i> My Profile
+                                </a></li>
+                                {% if session.get('is_admin') %}
+                                <li><a class="dropdown-item" href="/admin">
+                                    <i class="bi bi-speedometer"></i> Admin Dashboard
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="#">
+                                    <i class="bi bi-clock-history"></i> Scan History
+                                </a></li>
+                                <li><a class="dropdown-item" href="#">
+                                    <i class="bi bi-star"></i> Favorites
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#">
+                                    <i class="bi bi-gear"></i> Settings
+                                </a></li>
+                                <li><a class="dropdown-item text-danger" href="/logout">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- User is not logged in - show auth buttons -->
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.path == '/register' else '' }}" href="/register">
+                                <i class="bi bi-person-plus"></i> Register
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-light text-success ms-2" href="/login">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-5 py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h4 class="fw-bold">
+                        <i class="bi bi-apple me-2"></i>Nutrition Scanner
+                    </h4>
+                    <p>Making healthy choices easier through technology. Scan, analyze, and make informed decisions about your food.</p>
+                    <div class="mt-3">
+                        <a href="#" class="text-white me-3 fs-5"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white me-3 fs-5"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="text-white me-3 fs-5"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-white fs-5"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <h5 class="fw-bold">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="text-white text-decoration-none">Home</a></li>
+                        <li><a href="/about" class="text-white text-decoration-none">About</a></li>
+                        <li><a href="/contact" class="text-white text-decoration-none">Contact</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h5 class="fw-bold">Resources</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white text-decoration-none">Nutrition Guide</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Healthy Recipes</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">Blog</a></li>
+                        <li><a href="#" class="text-white text-decoration-none">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h5 class="fw-bold">Contact Us</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-envelope me-2"></i> info@nutriscan.com</li>
+                        <li><i class="bi bi-telephone me-2"></i> +1 (555) 123-4567</li>
+                        <li><i class="bi bi-geo-alt me-2"></i> 123 Health Street</li>
+                        <li class="mt-3">
+                            <a href="#" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-chat-dots"></i> Live Chat
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center">
+                <small>&copy; 2024 Nutrition Scanner. All rights reserved. | Made with <i class="bi bi-heart-fill text-danger"></i> for healthier lives</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+        
+        // Demo login for testing
+        function demoLogin(isAdmin = false) {
+            const email = isAdmin ? 'admin@nutriscan.com' : 'demo@example.com';
+            const password = isAdmin ? 'admin123' : 'demo123';
+            
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Demo login failed');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Demo login error');
+            });
+        }
+        
+        // Add demo login button if not logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const isLoggedIn = {{ 'true' if session.get('user_id') else 'false' }};
+            if (!isLoggedIn && document.querySelector('.navbar-nav.ms-auto')) {
+                const demoBtn = document.createElement('li');
+                demoBtn.className = 'nav-item dropdown';
+                demoBtn.innerHTML = `
+                    <button class="btn btn-outline-light btn-sm ms-2 dropdown-toggle" type="button" 
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-badge"></i> Demo Login
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" onclick="demoLogin(true)">
+                            <i class="bi bi-shield-check text-danger me-2"></i>Admin Demo
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="demoLogin(false)">
+                            <i class="bi bi-person text-success me-2"></i>User Demo
+                        </a></li>
+                    </ul>
+                `;
+                document.querySelector('.navbar-nav.ms-auto').appendChild(demoBtn);
+            }
+        });
+        
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+{% block title %}Register - Nutrition Scanner{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-lg border-0">
+            <!-- Header Section -->
+            <div class="card-header bg-gradient-success text-white py-4">
+                <div class="text-center">
+                    <i class="bi bi-person-plus display-5 d-block mb-3"></i>
+                    <h1 class="h2 fw-bold mb-1">Create Your Account</h1>
+                    <p class="mb-0 opacity-75">Join thousands who are making healthier choices</p>
+                </div>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <form id="registerForm" action="/register" method="POST">
+                    <!-- Personal Information -->
+                    <h5 class="mb-4 text-success">
+                        <i class="bi bi-person-badge me-2"></i>Personal Information
+                    </h5>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label fw-bold">
+                                First Name *
+                            </label>
+                            <input type="text" class="form-control" 
+                                   id="firstName" name="firstName" required
+                                   placeholder="John">
+                            <div class="invalid-feedback">Please enter your first name</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label fw-bold">
+                                Last Name *
+                            </label>
+                            <input type="text" class="form-control" 
+                                   id="lastName" name="lastName" required
+                                   placeholder="Doe">
+                            <div class="invalid-feedback">Please enter your last name</div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="mb-4">
+                        <label for="email" class="form-label fw-bold">
+                            Email Address *
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-at"></i>
+                            </span>
+                            <input type="email" class="form-control" 
+                                   id="email" name="email" required
+                                   placeholder="name@example.com">
+                        </div>
+                        <div class="form-text">We'll never share your email with anyone</div>
+                        <div class="invalid-feedback">Please enter a valid email address</div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-bold">
+                            Password *
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" 
+                                   id="password" name="password" required
+                                   placeholder="Create a strong password">
+                            <button class="btn btn-outline-secondary" type="button" 
+                                    id="togglePassword">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Password Strength Meter -->
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">Password Strength</small>
+                                <small id="strengthText" class="fw-bold">Weak</small>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" id="strengthBar" 
+                                     style="width: 20%"></div>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Use at least 8 characters with mix of letters, numbers & symbols
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-4">
+                        <label for="confirmPassword" class="form-label fw-bold">
+                            Confirm Password *
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" 
+                                   id="confirmPassword" name="confirmPassword" required
+                                   placeholder="Re-enter your password">
+                            <button class="btn btn-outline-secondary" type="button" 
+                                    id="toggleConfirmPassword">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback" id="passwordMatchError">
+                            Passwords do not match
+                        </div>
+                    </div>
+
+                    <!-- Health Profile Section (Optional) -->
+                    <div class="accordion mb-4" id="healthAccordion">
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed bg-light text-success" 
+                                        type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#healthProfile">
+                                    <i class="bi bi-heart-pulse me-2"></i>
+                                    <span class="fw-bold">Set Up Health Profile (Optional)</span>
+                                </button>
+                            </h2>
+                            <div id="healthProfile" class="accordion-collapse collapse" 
+                                 data-bs-parent="#healthAccordion">
+                                <div class="accordion-body bg-light">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Age</label>
+                                            <input type="number" class="form-control" 
+                                                   name="age" min="1" max="120">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Weight (kg)</label>
+                                            <input type="number" class="form-control" 
+                                                   name="weight" step="0.1" min="20" max="200">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Height (cm)</label>
+                                            <input type="number" class="form-control" 
+                                                   name="height" min="50" max="250">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <label class="form-label">Health Conditions (if any)</label>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="conditions[]" value="diabetes" id="regDiabetes">
+                                                    <label class="form-check-label" for="regDiabetes">
+                                                        Diabetes
+                                                    </label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="conditions[]" value="hypertension" id="regHypertension">
+                                                    <label class="form-check-label" for="regHypertension">
+                                                        High Blood Pressure
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="conditions[]" value="cholesterol" id="regCholesterol">
+                                                    <label class="form-check-label" for="regCholesterol">
+                                                        High Cholesterol
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="terms" required>
+                        <label class="form-check-label" for="terms">
+                            I agree to the 
+                            <a href="#" class="text-success text-decoration-none">Terms of Service</a> 
+                            and 
+                            <a href="#" class="text-success text-decoration-none">Privacy Policy</a>
+                        </label>
+                        <div class="invalid-feedback">You must agree to the terms</div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-success btn-lg fw-bold">
+                            <i class="bi bi-person-check me-2"></i>
+                            Create Account
+                        </button>
+                    </div>
+
+                    <!-- Login Link -->
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? 
+                            <a href="/login" class="text-success text-decoration-none fw-bold">
+                                Sign In
+                            </a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Demo -->
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-success" onclick="fillDemoData()">
+                <i class="bi bi-lightning-charge me-2"></i>Fill Demo Data for Quick Testing
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 15px;
+    }
+    .card-header {
+        border-radius: 15px 15px 0 0 !important;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: #e8f5e9;
+        color: #198754;
+    }
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+    }
+</style>
+
+<script>
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const icon = this.querySelector('i');
+        togglePasswordVisibility(passwordInput, icon);
+    });
+    
+    document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+        const confirmInput = document.getElementById('confirmPassword');
+        const icon = this.querySelector('i');
+        togglePasswordVisibility(confirmInput, icon);
+    });
+    
+    function togglePasswordVisibility(input, icon) {
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+    
+    // Password strength checker
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        
+        let strength = 0;
+        let color = 'danger';
+        let text = 'Very Weak';
+        
+        // Length check
+        if (password.length >= 8) strength += 25;
+        if (password.length >= 12) strength += 10;
+        
+        // Contains lowercase
+        if (/[a-z]/.test(password)) strength += 15;
+        // Contains uppercase
+        if (/[A-Z]/.test(password)) strength += 15;
+        // Contains numbers
+        if (/[0-9]/.test(password)) strength += 15;
+        // Contains special chars
+        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength += 20;
+        
+        // Set color and text
+        if (strength >= 80) {
+            color = 'success';
+            text = 'Very Strong';
+        } else if (strength >= 60) {
+            color = 'success';
+            text = 'Strong';
+        } else if (strength >= 40) {
+            color = 'warning';
+            text = 'Medium';
+        } else if (strength >= 20) {
+            color = 'info';
+            text = 'Weak';
+        }
+        
+        strengthBar.style.width = Math.min(strength, 100) + '%';
+        strengthBar.className = 'progress-bar bg-' + color;
+        strengthText.textContent = text;
+        strengthText.className = 'fw-bold text-' + color;
+    });
+    
+    // Password confirmation validation
+    document.getElementById('confirmPassword').addEventListener('input', function() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = this.value;
+        const errorDiv = document.getElementById('passwordMatchError');
+        
+        if (confirmPassword && password !== confirmPassword) {
+            this.classList.add('is-invalid');
+            errorDiv.style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            errorDiv.style.display = 'none';
+        }
+    });
+    
+    // Form validation
+    const form = document.getElementById('registerForm');
+    form.addEventListener('submit', function(e) {
+        // Check if form is valid
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+        
+        // Check password match
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return;
+        }
+        
+        // Check password strength
+        if (password.length < 8) {
+            e.preventDefault();
+            alert('Password must be at least 8 characters long');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+        submitBtn.disabled = true;
+        
+        // Allow form submission
+    });
+    
+    // Fill demo data for testing
+    function fillDemoData() {
+        document.getElementById('firstName').value = 'John';
+        document.getElementById('lastName').value = 'Doe';
+        document.getElementById('email').value = 'john.doe@example.com';
+        document.getElementById('password').value = 'SecurePass123!';
+        document.getElementById('confirmPassword').value = 'SecurePass123!';
+        document.getElementById('terms').checked = true;
+        
+        // Trigger validation
+        document.getElementById('password').dispatchEvent(new Event('input'));
+        document.getElementById('confirmPassword').dispatchEvent(new Event('input'));
+        
+        // Show success message
+        alert('Demo data filled! You can now click "Create Account" to register.');
+    }
+    
+    // Real-time email validation
+    document.getElementById('email').addEventListener('blur', function() {
+        const email = this.value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (email && !emailRegex.test(email)) {
+            this.classList.add('is-invalid');
+            this.nextElementSibling.textContent = 'Please enter a valid email address';
+        } else {
+            this.classList.remove('is-invalid');
+        }
+    });
+</script>
+{% endblock %}

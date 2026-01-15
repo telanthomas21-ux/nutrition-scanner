@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Manage Users - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold text-success">
+                <i class="bi bi-people me-2"></i>Manage Users
+            </h1>
+            <p class="text-muted">View and manage all registered users</p>
+        </div>
+        <div>
+            <a href="/admin" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">All Users ({{ users|length }})</h5>
+            <div class="input-group" style="width: 300px;">
+                <input type="text" id="searchUsers" class="form-control" placeholder="Search users...">
+                <button class="btn btn-outline-secondary" type="button">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td><code>#{{ user[0] }}</code></td>
+                            <td>{{ user[1] }} {{ user[2] }}</td>
+                            <td>{{ user[3] }}</td>
+                            <td>
+                                {% if user[4] == 1 %}
+                                <span class="badge bg-success">Admin</span>
+                                {% else %}
+                                <span class="badge bg-secondary">User</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ user[5]|string|truncate(10, True, '') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    {% if user[4] == 1 and user[0] == session.get('user_id') %}
+                                    <button class="btn btn-outline-secondary disabled" title="Current User">
+                                        <i class="bi bi-person-check"></i>
+                                    </button>
+                                    {% else %}
+                                    <a href="/admin/toggle-admin/{{ user[0] }}" 
+                                       class="btn btn-outline-{{ 'warning' if user[4] == 1 else 'success' }}"
+                                       onclick="return confirm('Make {{ user[3] }} {{ 'Regular User' if user[4] == 1 else 'Admin' }}?')">
+                                        <i class="bi bi-shield-{{ 'minus' if user[4] == 1 else 'check' }}"></i>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if user[0] != session.get('user_id') %}
+                                    <a href="/admin/delete-user/{{ user[0] }}" 
+                                       class="btn btn-outline-danger"
+                                       onclick="return confirm('Delete user {{ user[3] }}? This cannot be undone.')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No users found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="text-success">{{ users|length }}</h3>
+                    <p class="text-muted mb-0">Total Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="text-success">{{ users|selectattr('4', 'equalto', 1)|list|length }}</h3>
+                    <p class="text-muted mb-0">Admins</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ users|selectattr('4', 'equalto', 0)|list|length }}</h3>
+                    <p class="text-muted mb-0">Regular Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    {% if users %}
+                    {% set latest_user = users[0] %}
+                    <h6 class="text-muted">Latest User</h6>
+                    <p class="mb-0">{{ latest_user[1] }} {{ latest_user[2] }}</p>
+                    {% else %}
+                    <h6 class="text-muted">No Users</h6>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Tips -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle text-info me-2"></i>User Management Guidelines
+            </h5>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li>Admins have full access to all features including this admin panel</li>
+                <li>Regular users can only scan products and view their own history</li>
+                <li>You cannot delete your own account from here</li>
+                <li>Use caution when granting admin privileges</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+    .btn-group .btn {
+        border-radius: 5px !important;
+        margin: 2px;
+    }
+</style>
+
+<script>
+    // User search functionality
+    document.getElementById('searchUsers').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#usersTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+    
+    // Auto-refresh user list every 60 seconds
+    setTimeout(() => {
+        window.location.reload();
+    }, 60000);
+</script>
+{% endblock %}

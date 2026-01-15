@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">📊 Product Comparison</h1>
+        <p class="lead text-muted">Side-by-side nutritional comparison of {{ product1[1] }} vs {{ product2[1] }}</p>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="card shadow-lg">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 25%;">Nutrition Facts</th>
+                            <th style="width: 37.5%;" class="text-center">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div class="me-3">
+                                        <span class="badge bg-primary fs-6">{{ product1[0] }}</span>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0">{{ product1[1] }}</h5>
+                                        <small class="text-light">{{ product1[8]|healthy_badge|safe }}</small>
+                                    </div>
+                                </div>
+                            </th>
+                            <th style="width: 37.5%;" class="text-center">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div class="me-3">
+                                        <span class="badge bg-danger fs-6">{{ product2[0] }}</span>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0">{{ product2[1] }}</h5>
+                                        <small class="text-light">{{ product2[8]|healthy_badge|safe }}</small>
+                                    </div>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Calories -->
+                        <tr>
+                            <td class="fw-bold bg-light">Calories (kcal)</td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product1[2] }}</span>
+                                    <div class="progress" style="width: 70%; height: 20px;">
+                                        {% set p1_cal_percent = (product1[2] / 2000) * 100 %}
+                                        <div class="progress-bar bg-warning" style="width: {{ p1_cal_percent if p1_cal_percent <= 100 else 100 }}%">
+                                            {{ "%.1f"|format(p1_cal_percent) }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product2[2] }}</span>
+                                    <div class="progress" style="width: 70%; height: 20px;">
+                                        {% set p2_cal_percent = (product2[2] / 2000) * 100 %}
+                                        <div class="progress-bar bg-warning" style="width: {{ p2_cal_percent if p2_cal_percent <= 100 else 100 }}%">
+                                            {{ "%.1f"|format(p2_cal_percent) }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Sugar -->
+                        <tr>
+                            <td class="fw-bold bg-light">
+                                Sugar (g)
+                                <br><small class="text-muted">Daily max: 50g</small>
+                            </td>
+                            <td class="text-center {% if product1[3] > product2[3] %}table-success{% elif product1[3] < product2[3] %}table-danger{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product1[3] }}</span>
+                                    <div>
+                                        {% set p1_sugar_percent = (product1[3] / 50) * 100 %}
+                                        {% if p1_sugar_percent > 40 %}
+                                        <span class="badge bg-danger">High Sugar</span>
+                                        {% elif p1_sugar_percent > 20 %}
+                                        <span class="badge bg-warning">Moderate</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Low Sugar</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center {% if product2[3] > product1[3] %}table-success{% elif product2[3] < product1[3] %}table-danger{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product2[3] }}</span>
+                                    <div>
+                                        {% set p2_sugar_percent = (product2[3] / 50) * 100 %}
+                                        {% if p2_sugar_percent > 40 %}
+                                        <span class="badge bg-danger">High Sugar</span>
+                                        {% elif p2_sugar_percent > 20 %}
+                                        <span class="badge bg-warning">Moderate</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Low Sugar</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Fat -->
+                        <tr>
+                            <td class="fw-bold bg-light">
+                                Fat (g)
+                                <br><small class="text-muted">Daily max: 70g</small>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product1[4] }}</span>
+                                    <div class="progress" style="width: 70%; height: 20px;">
+                                        {% set p1_fat_percent = (product1[4] / 70) * 100 %}
+                                        <div class="progress-bar bg-info" style="width: {{ p1_fat_percent if p1_fat_percent <= 100 else 100 }}%">
+                                            {{ "%.1f"|format(p1_fat_percent) }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product2[4] }}</span>
+                                    <div class="progress" style="width: 70%; height: 20px;">
+                                        {% set p2_fat_percent = (product2[4] / 70) * 100 %}
+                                        <div class="progress-bar bg-info" style="width: {{ p2_fat_percent if p2_fat_percent <= 100 else 100 }}%">
+                                            {{ "%.1f"|format(p2_fat_percent) }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Protein -->
+                        <tr>
+                            <td class="fw-bold bg-light">
+                                Protein (g)
+                                <br><small class="text-muted">Daily min: 50g</small>
+                            </td>
+                            <td class="text-center {% if product1[5] > product2[5] %}table-success{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product1[5] }}</span>
+                                    {% if product1[5] > 10 %}
+                                    <span class="badge bg-success">High Protein</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-center {% if product2[5] > product1[5] %}table-success{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product2[5] }}</span>
+                                    {% if product2[5] > 10 %}
+                                    <span class="badge bg-success">High Protein</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Sodium -->
+                        <tr>
+                            <td class="fw-bold bg-light">
+                                Sodium (mg)
+                                <br><small class="text-muted">Daily max: 2300mg</small>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product1[6] }}</span>
+                                    {% if product1[6] > 400 %}
+                                    <span class="badge bg-danger">High Sodium</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fs-5">{{ product2[6] }}</span>
+                                    {% if product2[6] > 400 %}
+                                    <span class="badge bg-danger">High Sodium</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Chemicals -->
+                        <tr>
+                            <td class="fw-bold bg-light">Chemical Additives</td>
+                            <td class="text-center">
+                                {% if product1[7] %}
+                                <span class="badge bg-warning">{{ product1[7] }}</span>
+                                {% else %}
+                                <span class="badge bg-success">No Additives</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if product2[7] %}
+                                <span class="badge bg-warning">{{ product2[7] }}</span>
+                                {% else %}
+                                <span class="badge bg-success">No Additives</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        
+                        <!-- Health Rating -->
+                        <tr class="table-active">
+                            <td class="fw-bold">Overall Health Rating</td>
+                            <td class="text-center">
+                                {{ product1[8]|healthy_stars|safe }}
+                            </td>
+                            <td class="text-center">
+                                {{ product2[8]|healthy_stars|safe }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Winner Card -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm {% if product1[2] < product2[2] %}border-success{% endif %}">
+                <div class="card-body text-center">
+                    <h5>🏆 Lower Calories</h5>
+                    {% if product1[2] < product2[2] %}
+                    <div class="alert alert-success">
+                        <strong>Winner: {{ product1[1] }}</strong><br>
+                        {{ product1[2] }} kcal vs {{ product2[2] }} kcal
+                    </div>
+                    {% elif product2[2] < product1[2] %}
+                    <div class="alert alert-success">
+                        <strong>Winner: {{ product2[1] }}</strong><br>
+                        {{ product2[2] }} kcal vs {{ product1[2] }} kcal
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <strong>Tie!</strong> Both have {{ product1[2] }} kcal
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm {% if product1[3] < product2[3] %}border-success{% endif %}">
+                <div class="card-body text-center">
+                    <h5>🍬 Lower Sugar</h5>
+                    {% if product1[3] < product2[3] %}
+                    <div class="alert alert-success">
+                        <strong>Winner: {{ product1[1] }}</strong><br>
+                        {{ product1[3] }}g vs {{ product2[3] }}g
+                    </div>
+                    {% elif product2[3] < product1[3] %}
+                    <div class="alert alert-success">
+                        <strong>Winner: {{ product2[1] }}</strong><br>
+                        {{ product2[3] }}g vs {{ product1[3] }}g
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <strong>Tie!</strong> Both have {{ product1[3] }}g sugar
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="text-center mt-5">
+        <a href="/" class="btn btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i> Back to Scanner
+        </a>
+        <a href="/p/{{ product1[0] }}" class="btn btn-primary me-3">
+            <i class="bi bi-info-circle"></i> View {{ product1[1] }} Details
+        </a>
+        <a href="/p/{{ product2[0] }}" class="btn btn-danger">
+            <i class="bi bi-info-circle"></i> View {{ product2[1] }} Details
+        </a>
+    </div>
+</div>
+
+<style>
+.table th, .table td {
+    vertical-align: middle;
+}
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+.badge {
+    font-size: 0.9em;
+}
+.card {
+    border-radius: 15px;
+}
+</style>
+{% endblock %}

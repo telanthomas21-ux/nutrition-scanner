@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h2>Personalized Analysis for {{ product[1] }}</h2>
+        
+        <!-- Health Recommendation -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                {% if is_safe %}
+                <div class="alert alert-success">
+                    <h3>✅ SAFE for you</h3>
+                    <p class="mb-0">This product appears to be suitable for your health profile</p>
+                </div>
+                {% else %}
+                <div class="alert alert-danger">
+                    <h3>❌ NOT RECOMMENDED</h3>
+                    <p class="mb-0">This product may not be suitable for your health conditions</p>
+                </div>
+                {% endif %}
+                <p class="text-muted">ML Health Score: <strong>{{ "Healthy" if ml_score else "Risky" }}</strong></p>
+            </div>
+        </div>
+
+        <!-- Nutritional Comparison -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">📊 Nutritional Facts vs Daily Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nutrient</th>
+                            <th>This Product</th>
+                            <th>Daily Max*</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Sugar</strong></td>
+                            <td>{{ product[3] }}g</td>
+                            <td>25g</td>
+                            <td class="{{ 'text-danger' if product[3] > 25 else 'text-success' }}">
+                                {{ "⚠️ High" if product[3] > 25 else "✅ OK" }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fat</strong></td>
+                            <td>{{ product[4] }}g</td>
+                            <td>65g</td>
+                            <td class="{{ 'text-danger' if product[4] > 65 else 'text-success' }}">
+                                {{ "⚠️ High" if product[4] > 65 else "✅ OK" }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sodium</strong></td>
+                            <td>{{ product[6] }}mg</td>
+                            <td>2300mg</td>
+                            <td class="{{ 'text-danger' if product[6] > 2300 else 'text-success' }}">
+                                {{ "⚠️ High" if product[6] > 2300 else "✅ OK" }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Protein</strong></td>
+                            <td>{{ product[5] }}g</td>
+                            <td>50g</td>
+                            <td class="{{ 'text-success' if product[5] > 10 else 'text-warning' }}">
+                                {{ "✅ Good" if product[5] > 10 else "⚠️ Low" }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Calories</strong></td>
+                            <td>{{ product[2] }} kcal</td>
+                            <td>2000 kcal</td>
+                            <td class="{{ 'text-warning' if product[2] > 500 else 'text-success' }}">
+                                {{ "⚠️ High" if product[2] > 500 else "✅ Moderate" }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <small class="text-muted">*Based on average adult daily requirements</small>
+            </div>
+        </div>
+
+        <!-- Personalized Warnings -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">🔍 Personalized Health Insights</h5>
+            </div>
+            <div class="card-body">
+                {% if user_conditions.diabetes and product[3] > 10 %}
+                <div class="alert alert-danger">
+                    <strong>🚨 Diabetes Alert:</strong> High sugar content ({{ product[3] }}g) may significantly affect blood sugar levels. Not recommended for diabetic patients.
+                </div>
+                {% endif %}
+
+                {% if (user_conditions.bp > 140 or user_conditions.hypertension) and product[6] > 300 %}
+                <div class="alert alert-danger">
+                    <strong>🚨 Blood Pressure Alert:</strong> High sodium content ({{ product[6] }}mg) is dangerous for hypertension patients. Your BP: {{ user_conditions.bp }}.
+                </div>
+                {% endif %}
+
+                {% if user_conditions.cholesterol and product[4] > 10 %}
+                <div class="alert alert-warning">
+                    <strong>⚠️ Cholesterol Alert:</strong> High fat content ({{ product[4] }}g) may negatively impact cholesterol levels.
+                </div>
+                {% endif %}
+
+                {% if user_conditions.age > 60 and product[6] > 300 %}
+                <div class="alert alert-info">
+                    <strong>👴 Senior Health Note:</strong> At your age ({{ user_conditions.age }}), lower sodium intake is recommended for heart health.
+                </div>
+                {% endif %}
+
+                {% if is_safe and not (user_conditions.diabetes or user_conditions.cholesterol or user_conditions.hypertension) %}
+                <div class="alert alert-success">
+                    <strong>👍 Good Choice:</strong> This product fits well within general health guidelines for your profile.
+                </div>
+                {% endif %}
+
+                <!-- Chemical Warnings -->
+                {% if product[7] %}
+                <div class="alert alert-warning">
+                    <strong>🧪 Chemical Content:</strong> This product contains: <strong>{{ product[7] }}</strong>
+                    {% if "Artificial" in product[7] %}
+                    <br><small>Artificial additives may cause allergic reactions in sensitive individuals.</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- User Profile Summary -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">👤 Your Health Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Age:</strong> {{ user_conditions.age }} years</p>
+                        <p><strong>Weight:</strong> {{ user_conditions.weight }} kg</p>
+                        <p><strong>Blood Pressure:</strong> {{ user_conditions.bp }} mmHg</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Health Conditions:</strong></p>
+                        <ul>
+                            {% if user_conditions.diabetes %}<li>Diabetes</li>{% endif %}
+                            {% if user_conditions.cholesterol %}<li>High Cholesterol</li>{% endif %}
+                            {% if user_conditions.hypertension %}<li>Hypertension</li>{% endif %}
+                            {% if not (user_conditions.diabetes or user_conditions.cholesterol or user_conditions.hypertension) %}
+                            <li>No major health conditions reported</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-4 text-center">
+            <a href="/p/{{ product[0] }}" class="btn btn-secondary">← Back to Product</a>
+            <a href="/" class="btn btn-primary">Scan Another Product</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

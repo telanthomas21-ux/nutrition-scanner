@@ -1,0 +1,641 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <!-- Header with Product Info -->
+    <div class="row mb-5">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/#manual-lookup">Products</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ product[1] }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex align-items-center mb-3">
+                <h1 class="display-5 fw-bold me-3">{{ product[1] }}</h1>
+                <span class="badge {{ 'bg-success' if product[8] else 'bg-warning' }} fs-6 px-3 py-2">
+                    <i class="bi bi-{{ 'heart-fill' if product[8] else 'exclamation-triangle-fill' }} me-1"></i>
+                    {{ 'HEALTHY CHOICE' if product[8] else 'CONSUME WITH CARE' }}
+                </span>
+            </div>
+            
+            <p class="lead text-muted">
+                Detailed nutritional analysis and health recommendations for this product.
+            </p>
+        </div>
+        
+        <div class="col-md-4 text-md-end">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Quick Stats</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Calories:</span>
+                        <span class="fw-bold">{{ product[2] }} kcal</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Health Score:</span>
+                        <span class="fw-bold {{ 'text-success' if product[8] else 'text-warning' }}">
+                            {{ '4.5/5' if product[8] else '2.5/5' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nutrition Overview Cards -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <h3 class="mb-4">📊 Nutritional Overview</h3>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card border-start border-4 border-danger h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="text-muted mb-1">Calories</h6>
+                                    <h4 class="mb-0">{{ product[2] }} kcal</h4>
+                                    <small class="text-muted">per serving</small>
+                                </div>
+                                <div class="bg-danger bg-opacity-10 p-2 rounded">
+                                    <i class="bi bi-fire text-danger fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                {% set calories_percent = (product[2] / 2000) * 100 %}
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-danger" 
+                                         style="width: {{ calories_percent if calories_percent <= 100 else 100 }}%"
+                                         role="progressbar">
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ "%.1f"|format(calories_percent) }}% of daily goal</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card border-start border-4 border-warning h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="text-muted mb-1">Sugar</h6>
+                                    <h4 class="mb-0">{{ product[3] }}g</h4>
+                                    <small class="text-muted">total sugar</small>
+                                </div>
+                                <div class="bg-warning bg-opacity-10 p-2 rounded">
+                                    <i class="bi bi-droplet-half text-warning fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                {% set sugar_percent = (product[3] / 50) * 100 %}
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" 
+                                         style="width: {{ sugar_percent if sugar_percent <= 100 else 100 }}%"
+                                         role="progressbar">
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ "%.1f"|format(sugar_percent) }}% of daily max</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card border-start border-4 border-info h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="text-muted mb-1">Protein</h6>
+                                    <h4 class="mb-0">{{ product[5] }}g</h4>
+                                    <small class="text-muted">high quality</small>
+                                </div>
+                                <div class="bg-info bg-opacity-10 p-2 rounded">
+                                    <i class="bi bi-egg-fried text-info fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                {% set protein_percent = (product[5] / 50) * 100 %}
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-info" 
+                                         style="width: {{ protein_percent if protein_percent <= 100 else 100 }}%"
+                                         role="progressbar">
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ "%.1f"|format(protein_percent) }}% of daily goal</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card border-start border-4 border-primary h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="text-muted mb-1">Overall</h6>
+                                    <h4 class="mb-0 {{ 'text-success' if product[8] else 'text-warning' }}">
+                                        {{ 'Good' if product[8] else 'Fair' }}
+                                    </h4>
+                                    <small class="text-muted">health rating</small>
+                                </div>
+                                <div class="bg-primary bg-opacity-10 p-2 rounded">
+                                    <i class="bi bi-heart-pulse text-primary fs-4"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        {% for i in range(5) %}
+                                            {% if (product[8] and i < 4) or (not product[8] and i < 2) %}
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                            {% else %}
+                                                <i class="bi bi-star text-secondary"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <small>{{ '4.0/5.0' if product[8] else '2.0/5.0' }}</small>
+                                </div>
+                                <small class="text-muted d-block mt-1">Based on nutrition data</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Nutrition Table -->
+    <div class="row mb-5">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">📈 Detailed Nutrition Facts</h5>
+                    <span class="badge bg-light text-dark">Per Serving</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nutrient</th>
+                                    <th class="text-end">Amount</th>
+                                    <th class="text-end">Daily Value*</th>
+                                    <th class="text-end">% Daily</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Calories -->
+                                {% set calories_percent = (product[2] / 2000) * 100 %}
+                                <tr>
+                                    <td>
+                                        <strong>Calories</strong><br>
+                                        <small class="text-muted">Energy</small>
+                                    </td>
+                                    <td class="text-end fw-bold">{{ product[2] }} kcal</td>
+                                    <td class="text-end">2,000 kcal</td>
+                                    <td class="text-end">{{ "%.1f"|format(calories_percent) }}%</td>
+                                    <td>
+                                        <span class="badge {{ 'bg-success' if calories_percent <= 20 else 'bg-warning' if calories_percent <= 40 else 'bg-danger' }}">
+                                            {{ 'Low' if calories_percent <= 20 else 'Moderate' if calories_percent <= 40 else 'High' }}
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- Sugar -->
+                                {% set sugar_percent = (product[3] / 50) * 100 %}
+                                <tr>
+                                    <td>
+                                        <strong>Total Sugar</strong><br>
+                                        <small class="text-muted">Includes added sugars</small>
+                                    </td>
+                                    <td class="text-end fw-bold">{{ product[3] }}g</td>
+                                    <td class="text-end">50g max</td>
+                                    <td class="text-end">{{ "%.1f"|format(sugar_percent) }}%</td>
+                                    <td>
+                                        <span class="badge {{ 'bg-success' if sugar_percent <= 20 else 'bg-warning' if sugar_percent <= 40 else 'bg-danger' }}">
+                                            {{ 'Low' if sugar_percent <= 20 else 'Moderate' if sugar_percent <= 40 else 'High' }}
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- Fat -->
+                                {% set fat_percent = (product[4] / 70) * 100 %}
+                                <tr>
+                                    <td>
+                                        <strong>Total Fat</strong><br>
+                                        <small class="text-muted">Saturated + Unsaturated</small>
+                                    </td>
+                                    <td class="text-end fw-bold">{{ product[4] }}g</td>
+                                    <td class="text-end">70g max</td>
+                                    <td class="text-end">{{ "%.1f"|format(fat_percent) }}%</td>
+                                    <td>
+                                        <span class="badge {{ 'bg-success' if fat_percent <= 20 else 'bg-warning' if fat_percent <= 40 else 'bg-danger' }}">
+                                            {{ 'Low' if fat_percent <= 20 else 'Moderate' if fat_percent <= 40 else 'High' }}
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- Protein -->
+                                {% set protein_percent = (product[5] / 50) * 100 %}
+                                <tr>
+                                    <td>
+                                        <strong>Protein</strong><br>
+                                        <small class="text-muted">Essential amino acids</small>
+                                    </td>
+                                    <td class="text-end fw-bold">{{ product[5] }}g</td>
+                                    <td class="text-end">50g min</td>
+                                    <td class="text-end">{{ "%.1f"|format(protein_percent) }}%</td>
+                                    <td>
+                                        <span class="badge {{ 'bg-success' if protein_percent >= 60 else 'bg-warning' if protein_percent >= 30 else 'bg-secondary' }}">
+                                            {{ 'Good' if protein_percent >= 60 else 'Fair' if protein_percent >= 30 else 'Low' }}
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <!-- Sodium -->
+                                {% set sodium_percent = (product[6] / 2300) * 100 %}
+                                <tr>
+                                    <td>
+                                        <strong>Sodium</strong><br>
+                                        <small class="text-muted">Table salt equivalent</small>
+                                    </td>
+                                    <td class="text-end fw-bold">{{ product[6] }}mg</td>
+                                    <td class="text-end">2,300mg max</td>
+                                    <td class="text-end">{{ "%.1f"|format(sodium_percent) }}%</td>
+                                    <td>
+                                        <span class="badge {{ 'bg-success' if sodium_percent <= 10 else 'bg-warning' if sodium_percent <= 20 else 'bg-danger' }}">
+                                            {{ 'Low' if sodium_percent <= 10 else 'Moderate' if sodium_percent <= 20 else 'High' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-white text-muted">
+                        <small>* Percent Daily Values are based on a 2,000 calorie diet. Your daily values may be higher or lower depending on your calorie needs.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Daily Guidelines & Quick Tips -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">🎯 Daily Guidelines</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Calories</small>
+                            <small class="fw-bold">2,000 - 2,500 kcal</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Added Sugar</small>
+                            <small class="fw-bold">< 50g</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Total Fat</small>
+                            <small class="fw-bold">< 70g</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-info" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Saturated Fat</small>
+                            <small class="fw-bold">< 20g</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-danger" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Protein</small>
+                            <small class="fw-bold">50 - 65g</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Sodium</small>
+                            <small class="fw-bold">< 2,300mg</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Health Tips -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">💡 Health Tips</h6>
+                </div>
+                <div class="card-body">
+                    {% if product[8] %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <strong>Great Choice!</strong> This product fits well in a balanced diet.
+                    </div>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success me-2"></i>
+                            Low in added sugars
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success me-2"></i>
+                            Good nutrient balance
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check text-success me-2"></i>
+                            Minimal processing
+                        </li>
+                    </ul>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Consider moderation</strong> when consuming this product.
+                    </div>
+                    <ul class="list-unstyled mb-0">
+                        {% if product[3] > 15 %}
+                        <li class="mb-2">
+                            <i class="bi bi-exclamation text-warning me-2"></i>
+                            High sugar content
+                        </li>
+                        {% endif %}
+                        {% if product[6] > 300 %}
+                        <li class="mb-2">
+                            <i class="bi bi-exclamation text-warning me-2"></i>
+                            Consider sodium levels
+                        </li>
+                        {% endif %}
+                        {% if product[4] > 15 %}
+                        <li class="mb-2">
+                            <i class="bi bi-exclamation text-warning me-2"></i>
+                            Moderate fat content
+                        </li>
+                        {% endif %}
+                        <li class="mb-2">
+                            <i class="bi bi-lightbulb text-info me-2"></i>
+                            Pair with protein for balance
+                        </li>
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warnings Section (Conditional) -->
+    {% if product[3] > 20 or product[6] > 400 or product[7] %}
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="card border-warning shadow-sm">
+                <div class="card-header bg-warning bg-opacity-10 text-warning d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <h5 class="mb-0">⚠️ Important Considerations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if product[3] > 20 %}
+                        <div class="col-md-4 mb-3">
+                            <div class="border-start border-warning border-3 ps-3">
+                                <h6 class="text-warning">Sugar Alert</h6>
+                                <p class="mb-1">This product contains <strong>{{ product[3] }}g</strong> of sugar.</p>
+                                <small class="text-muted">That's {{ "%.0f"|format((product[3]/50)*100) }}% of your daily limit.</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product[6] > 400 %}
+                        <div class="col-md-4 mb-3">
+                            <div class="border-start border-warning border-3 ps-3">
+                                <h6 class="text-warning">Sodium Notice</h6>
+                                <p class="mb-1"><strong>{{ product[6] }}mg</strong> of sodium per serving.</p>
+                                <small class="text-muted">Consider if you monitor blood pressure.</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if product[7] %}
+                        <div class="col-md-4 mb-3">
+                            <div class="border-start border-warning border-3 ps-3">
+                                <h6 class="text-warning">Additives Present</h6>
+                                <p class="mb-1">{{ product[7] }}</p>
+                                <small class="text-muted">Some individuals may be sensitive.</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <div class="card bg-light border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Scanner
+                        </a>
+                        
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#personalizedAnalysis">
+                            <i class="bi bi-person-check me-2"></i>Personalized Analysis
+                        </button>
+                        
+                        {% if session.get('user_id') %}
+                        <button class="btn btn-outline-success" onclick="addToFavorites()">
+                            <i class="bi bi-bookmark me-2"></i>Save to Favorites
+                        </button>
+                        {% endif %}
+                        
+                        <a href="/compare/PROD001/vs/{{ product[0] }}" class="btn btn-info text-white">
+                            <i class="bi bi-bar-chart me-2"></i>Compare with Apple
+                        </a>
+                        
+                        <a href="/compare/PROD002/vs/{{ product[0] }}" class="btn btn-warning">
+                            <i class="bi bi-bar-chart me-2"></i>Compare with Chocolate
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Personalized Analysis Modal -->
+<div class="modal fade" id="personalizedAnalysis" tabindex="-1" aria-labelledby="analysisModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="analysisModalLabel">👤 Personalized Health Analysis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-4">Get custom recommendations based on your health profile and goals.</p>
+                
+                <form action="/analyze" method="POST">
+                    <input type="hidden" name="product_id" value="{{ product[0] }}">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Age</label>
+                            <input type="number" name="age" class="form-control" required min="1" max="120" value="30">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Weight (kg)</label>
+                            <input type="number" name="weight" class="form-control" step="0.1" required min="20" max="200" value="70">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Health Goal</label>
+                            <select name="goal" class="form-select">
+                                <option value="weight_loss">Weight Loss</option>
+                                <option value="maintenance">Maintain Weight</option>
+                                <option value="muscle_gain">Build Muscle</option>
+                                <option value="healthier">General Health</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Activity Level</label>
+                            <select name="activity" class="form-select">
+                                <option value="sedentary">Sedentary (Office job)</option>
+                                <option value="light">Light Exercise</option>
+                                <option value="moderate">Moderate (3-5 days/week)</option>
+                                <option value="active">Very Active</option>
+                                <option value="athlete">Athlete</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Any Dietary Restrictions?</label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="diabetes" id="diabetes">
+                                    <label class="form-check-label" for="diabetes">Diabetes</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="high_bp" id="high_bp">
+                                    <label class="form-check-label" for="high_bp">High Blood Pressure</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="heart_disease" id="heart_disease">
+                                    <label class="form-check-label" for="heart_disease">Heart Disease</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-heart-pulse me-2"></i>Get Personalized Recommendations
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+}
+
+.table th {
+    font-weight: 600;
+    color: #6c757d;
+    border-top: none;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.border-start {
+    border-left-width: 4px !important;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+}
+
+.modal-content {
+    border-radius: 12px;
+    border: none;
+}
+</style>
+
+<script>
+function addToFavorites() {
+    const productId = "{{ product[0] }}";
+    const productName = "{{ product[1] }}";
+    
+    // In a real app, you'd make an API call here
+    alert(`Added "${productName}" to your favorites!`);
+    
+    // Example fetch request:
+    // fetch('/api/favorites', {
+    //     method: 'POST',
+    //     headers: {'Content-Type': 'application/json'},
+    //     body: JSON.stringify({product_id: productId})
+    // })
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <h1>🛒 Nutrition Scanner</h1>
+        <p class="lead">Scan QR code or enter product ID to check nutritional information</p>
+
+        <!-- Manual Product Lookup -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Manual Product Lookup</h5>
+                
+                <div class="position-relative">
+                    <div class="input-group mb-3">
+                        <input
+                            type="text"
+                            id="productId"
+                            name="product_id"
+                            class="form-control"
+                            placeholder="Start typing product name or ID..."
+                            autocomplete="off"
+                            required
+                        >
+                        <button class="btn btn-success" type="button" onclick="checkProduct()">
+                            Check Nutrition
+                        </button>
+                    </div>
+                </div>
+                
+                <small class="text-muted">Try: Type "Apple" or "PROD001"</small>
+            </div>
+        </div>
+
+        <!-- QR Code Scanner -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">QR Code Scanner</h5>
+                <button class="btn btn-outline-primary mb-3" onclick="startCamera()">
+                    📷 Start Camera Scanner
+                </button>
+                
+                <div id="camera-container" class="mt-3" style="display: none;">
+                    <div class="alert alert-info">
+                        <small>Point camera at product QR code. Make sure it's well lit.</small>
+                    </div>
+                    <video id="camera" width="300" height="200" autoplay playsinline></video>
+                    <div class="mt-2">
+                        <button class="btn btn-secondary" onclick="stopCamera()">Stop Camera</button>
+                    </div>
+                </div>
+
+                <div id="scanner-result" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Product Comparison with Autocomplete -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">🔍 Compare Products</h5>
+                <p class="text-muted">Enter two product IDs to compare their nutritional values</p>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First Product</label>
+                        <div class="position-relative">
+                            <input type="text" id="compare1" class="form-control compare-input" placeholder="Start typing product name or ID..." autocomplete="off">
+                        </div>
+                        <small class="text-muted">e.g., Apple or PROD001</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Second Product</label>
+                        <div class="position-relative">
+                            <input type="text" id="compare2" class="form-control compare-input" placeholder="Start typing product name or ID..." autocomplete="off">
+                        </div>
+                        <small class="text-muted">e.g., Chocolate Bar or PROD002</small>
+                    </div>
+                </div>
+                
+                <div class="d-grid">
+                    <button class="btn btn-info" onclick="compareProducts()">
+                        <i class="bi bi-bar-chart"></i> Compare Products
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sample Products -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Sample Products</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-2">
+                            <div class="card-body py-2">
+                                <strong>Apple</strong><br>
+                                <small>ID: PROD001</small><br>
+                                <span class="badge bg-success">Healthy</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-2">
+                            <div class="card-body py-2">
+                                <strong>Chocolate Bar</strong><br>
+                                <small>ID: PROD002</small><br>
+                                <span class="badge bg-danger">Risky</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Autocomplete Dropdown (Will be positioned dynamically) -->
+<div id="autocomplete-overlay" class="autocomplete-overlay" style="display: none;"></div>
+<div id="autocomplete-dropdown" class="autocomplete-dropdown" style="display: none;"></div>
+
+<script>
+// Simple autocomplete implementation without complex positioning
+let searchTimeout = null;
+let currentInput = null;
+
+// Initialize autocomplete for all search inputs
+document.addEventListener('DOMContentLoaded', function() {
+    // Main product lookup input
+    const productInput = document.getElementById('productId');
+    if (productInput) {
+        setupInputAutocomplete(productInput);
+    }
+    
+    // Compare inputs
+    document.querySelectorAll('.compare-input').forEach(input => {
+        setupInputAutocomplete(input);
+    });
+    
+    // Close dropdown when clicking on overlay
+    document.getElementById('autocomplete-overlay').addEventListener('click', function() {
+        hideAutocomplete();
+    });
+    
+    // Close dropdown when pressing Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            hideAutocomplete();
+        }
+    });
+    
+    // Allow pressing Enter in main input field
+    document.getElementById('productId').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            checkProduct();
+        }
+    });
+});
+
+function setupInputAutocomplete(input) {
+    input.addEventListener('input', function(e) {
+        handleAutocompleteInput(e.target);
+    });
+    
+    input.addEventListener('focus', function() {
+        if (this.value.length > 1) {
+            handleAutocompleteInput(this);
+        }
+    });
+    
+    input.addEventListener('blur', function() {
+        // Delay hiding to allow clicking on dropdown items
+        setTimeout(() => {
+            const dropdown = document.getElementById('autocomplete-dropdown');
+            if (!dropdown.matches(':hover')) {
+                hideAutocomplete();
+            }
+        }, 200);
+    });
+}
+
+function handleAutocompleteInput(inputElement) {
+    clearTimeout(searchTimeout);
+    const query = inputElement.value.trim();
+    
+    if (query.length < 1) {
+        hideAutocomplete();
+        return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+        fetchAutocompleteResults(query, inputElement);
+    }, 300);
+    
+    currentInput = inputElement;
+}
+
+function fetchAutocompleteResults(query, inputElement) {
+    fetch(`/api/autocomplete?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            showAutocompleteResults(data, inputElement);
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            hideAutocomplete();
+        });
+}
+
+function showAutocompleteResults(results, inputElement) {
+    if (results.length === 0) {
+        hideAutocomplete();
+        return;
+    }
+    
+    // Get input position
+    const rect = inputElement.getBoundingClientRect();
+    const container = document.getElementById('autocomplete-dropdown');
+    const overlay = document.getElementById('autocomplete-overlay');
+    
+    // Position dropdown below input
+    container.style.position = 'fixed';
+    container.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+    container.style.left = rect.left + 'px';
+    container.style.width = rect.width + 'px';
+    container.style.maxHeight = '300px';
+    container.style.zIndex = '99999';
+    
+    // Show overlay to block interactions with elements below
+    overlay.style.display = 'block';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.zIndex = '99998';
+    overlay.style.backgroundColor = 'transparent';
+    
+    // Build dropdown content
+    let html = '<div class="autocomplete-list">';
+    
+    results.forEach(product => {
+        const isHealthy = product.is_healthy === 1;
+        const badgeClass = isHealthy ? 'bg-success' : 'bg-danger';
+        const badgeText = isHealthy ? 'Healthy' : 'Risky';
+        
+        html += `
+            <div class="autocomplete-item" 
+                 onclick="selectAutocompleteItem('${product.id}', '${product.name.replace("'", "\\'")}')"
+                 data-id="${product.id}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${product.name}</strong>
+                        <br>
+                        <small class="text-muted">ID: ${product.id} | Calories: ${product.calories}kcal</small>
+                    </div>
+                    <span class="badge ${badgeClass}">${badgeText}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+    container.style.display = 'block';
+    
+    // Add hover effects
+    const items = container.querySelectorAll('.autocomplete-item');
+    items.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f8f9fa';
+        });
+        item.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+}
+
+function selectAutocompleteItem(productId, productName) {
+    if (currentInput) {
+        // Set visible text and store the real ID
+        currentInput.value = productName;
+        currentInput.setAttribute('data-product-id', productId);
+
+        // Only main search redirects immediately
+        if (currentInput.id === 'productId') {
+            setTimeout(() => {
+                window.location.href = `/p/${productId}`;
+            }, 100);
+        }
+    }
+    hideAutocomplete();
+}
+
+function hideAutocomplete() {
+    document.getElementById('autocomplete-dropdown').style.display = 'none';
+    document.getElementById('autocomplete-overlay').style.display = 'none';
+    document.getElementById('autocomplete-dropdown').innerHTML = '';
+}
+
+// Product lookup function
+function checkProduct() {
+    const inputField = document.getElementById('productId');
+    const productName = inputField.value.trim();
+    const productId = inputField.getAttribute('data-product-id');
+    
+    if (productId) {
+        window.location.href = '/p/' + productId;
+    } else if (productName) {
+        window.location.href = '/p/' + encodeURIComponent(productName);
+    } else {
+        alert("Please enter or select a product!");
+    }
+}
+
+function compareProducts() {
+    const getProductIdFromInput = (inputId) => {
+        const input = document.getElementById(inputId);
+        const idFromAttr = input.getAttribute('data-product-id');
+        if (idFromAttr) return idFromAttr.trim();   // prefer selected ID
+        return input.value.trim();                  // fallback: typed text
+    };
+
+    const product1 = getProductIdFromInput('compare1');
+    const product2 = getProductIdFromInput('compare2');
+
+    if (!product1 || !product2) {
+        alert('Please select or enter both products');
+        return;
+    }
+    if (product1 === product2) {
+        alert('Please select two different products to compare');
+        return;
+    }
+
+    window.location.href =
+        `/compare/${encodeURIComponent(product1)}vs/${encodeURIComponent(product2)}`;
+}
+
+// Camera functionality
+let stream = null;
+
+function startCamera() {
+    const container = document.getElementById('camera-container');
+    const resultDiv = document.getElementById('scanner-result');
+    
+    resultDiv.innerHTML = '';
+    container.style.display = 'block';
+    
+    if (stream) {
+        stopCamera();
+    }
+    
+    navigator.mediaDevices.getUserMedia({ 
+        video: { 
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        } 
+    })
+    .then(function(cameraStream) {
+        stream = cameraStream;
+        const video = document.getElementById('camera');
+        video.srcObject = stream;
+        simulateQRDetection();
+    })
+    .catch(function(err) {
+        console.error("Camera access denied:", err);
+        resultDiv.innerHTML = `
+            <div class="alert alert-warning">
+                <strong>Camera Error:</strong> ${err.message || 'Cannot access camera'}
+                <br><small>Please allow camera permissions or use manual input.</small>
+            </div>
+        `;
+    });
+}
+
+function stopCamera() {
+    const video = document.getElementById('camera');
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    if (video) {
+        video.srcObject = null;
+    }
+    document.getElementById('camera-container').style.display = 'none';
+}
+
+function simulateQRDetection() {
+    const resultDiv = document.getElementById('scanner-result');
+    
+    resultDiv.innerHTML = `
+        <div class="alert alert-info">
+            <strong>Scanner Active:</strong> Point camera at QR code...
+            <br><small>For demo, use manual input or try these sample IDs.</small>
+        </div>
+    `;
+    
+    setTimeout(() => {
+        resultDiv.innerHTML = `
+            <div class="alert alert-warning">
+                <strong>Demo Mode:</strong> QR scanning simulation.
+                <br>In a real app, this would detect QR codes automatically.
+                <br><button class="btn btn-sm btn-primary mt-2" onclick="checkProduct()">
+                    Continue with Manual Input
+                </button>
+            </div>
+        `;
+    }, 3000);
+}
+
+// Stop camera when leaving page
+window.addEventListener('beforeunload', stopCamera);
+</script>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+#camera {
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    background: #000;
+}
+.btn {
+    border-radius: 20px;
+}
+.input-group {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Autocomplete Dropdown */
+.autocomplete-dropdown {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    overflow: hidden;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.autocomplete-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.autocomplete-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.autocomplete-item:hover {
+    background-color: #f8f9fa !important;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item .badge {
+    font-size: 0.7em;
+    padding: 4px 8px;
+}
+
+.autocomplete-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    z-index: 99998;
+}
+
+/* Ensure proper positioning */
+.position-relative {
+    position: relative !important;
+}
+</style>
+{% endblock %}

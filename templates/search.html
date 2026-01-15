@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>🔍 Search Results</h1>
+            <p class="lead">Results for: "<strong>{{ query }}</strong>"</p>
+            
+            <!-- Back button -->
+            <a href="/" class="btn btn-outline-secondary mb-4">
+                <i class="bi bi-arrow-left"></i> Back to Home
+            </a>
+            
+            {% if products %}
+            <div class="row">
+                {% for product in products %}
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title">{{ product[1] }}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">ID: {{ product[0] }}</h6>
+                                </div>
+                                <span class="badge {% if product[8] == 1 %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if product[8] == 1 %}Healthy{% else %}Risky{% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Calories</small><br>
+                                    <strong>{{ product[2] }} kcal</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Sugar</small><br>
+                                    <strong>{{ product[3] }}g</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Fat</small><br>
+                                    <strong>{{ product[4] }}g</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Protein</small><br>
+                                    <strong>{{ product[5] }}g</strong>
+                                </div>
+                            </div>
+                            
+                            {% if product[7] %}
+                            <div class="mt-2">
+                                <small class="text-muted">Chemicals:</small><br>
+                                <small class="text-danger">{{ product[7] }}</small>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mt-3">
+                                <a href="/p/{{ product[0] }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('{{ product[0] }}')">
+                                    <i class="bi bi-clipboard"></i> Copy ID
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <h4><i class="bi bi-exclamation-triangle"></i> No products found</h4>
+                <p>No products match your search for "<strong>{{ query }}</strong>"</p>
+                <p>Try searching for:</p>
+                <ul>
+                    <li>Product names (e.g., Apple, Chocolate, Bread)</li>
+                    <li>Product IDs (e.g., PROD001, PROD002)</li>
+                    <li>Partial names (e.g., "app" for Apple)</li>
+                </ul>
+                <a href="/" class="btn btn-primary">Back to Home</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(id) {
+    navigator.clipboard.writeText(id)
+        .then(() => {
+            alert(`Copied ID: ${id}`);
+        })
+        .catch(err => {
+            console.error('Failed to copy:', err);
+        });
+}
+</script>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+{% block title %}QR Generator - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold text-success">
+                <i class="bi bi-qr-code me-2"></i>QR Code Generator
+            </h1>
+            <p class="text-muted">Generate QR codes for your products</p>
+        </div>
+        <div>
+            <a href="/admin" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+            <a href="/admin/products" class="btn btn-outline-success">
+                <i class="bi bi-basket"></i> Products
+            </a>
+        </div>
+    </div>
+
+    <!-- QR Generation Section -->
+    <div class="row">
+        <!-- Product Selection -->
+        <div class="col-lg-5 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>Select Product
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Search Product</label>
+                        <input type="text" id="productSearch" class="form-control" 
+                               placeholder="Type to search products...">
+                    </div>
+                    
+                    <div class="list-group" id="productList" style="max-height: 400px; overflow-y: auto;">
+                        {% for product in products %}
+                        <a href="#" class="list-group-item list-group-item-action product-item" 
+                           data-id="{{ product[0] }}" data-name="{{ product[1] }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ product[1] }}</h6>
+                                    <small class="text-muted">ID: {{ product[0] }}</small>
+                                </div>
+                                <span class="badge bg-{{ 'success' if product[8] == 1 else 'danger' }}">
+                                    {{ 'Healthy' if product[8] == 1 else 'Risky' }}
+                                </span>
+                            </div>
+                        </a>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            No products found. <a href="/admin/products">Add products first</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeNutrition" checked>
+                            <label class="form-check-label" for="includeNutrition">
+                                Include nutrition info in QR code
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="addLogo" checked>
+                            <label class="form-check-label" for="addLogo">
+                                Add Nutrition Scanner logo
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-success w-100" onclick="generateSelectedQR()" 
+                            id="generateBtn" disabled>
+                        <i class="bi bi-qr-code-scan me-2"></i>Generate QR Code
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Preview & Actions -->
+        <div class="col-lg-7 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-image me-2"></i>QR Code Preview
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <div id="qrPreview" class="mb-4" style="min-height: 300px; display: flex; align-items: center; justify-content: center;">
+                        <div class="text-muted">
+                            <i class="bi bi-qr-code display-1 d-block mb-3"></i>
+                            <p>Select a product to generate QR code</p>
+                        </div>
+                    </div>
+                    
+                    <div id="qrDetails" class="mb-3" style="display: none;">
+                        <h5 id="productNameDisplay"></h5>
+                        <p class="text-muted mb-2">
+                            ID: <code id="productIdDisplay"></code>
+                        </p>
+                        <p class="mb-0">
+                            <small>Scan this QR code to view product details on Nutrition Scanner</small>
+                        </p>
+                    </div>
+                    
+                    <div class="btn-group mt-3" id="actionButtons" style="display: none;">
+                        <button class="btn btn-outline-success" onclick="downloadQR()">
+                            <i class="bi bi-download me-2"></i>Download PNG
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="printQR()">
+                            <i class="bi bi-printer me-2"></i>Print
+                        </button>
+                        <button class="btn btn-outline-info" onclick="shareQR()">
+                            <i class="bi bi-share me-2"></i>Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk QR Generation -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="bi bi-collection me-2"></i>Bulk QR Generation
+            </h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">Generate QR codes for multiple products at once</p>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAll">
+                            </th>
+                            <th>Product ID</th>
+                            <th>Product Name</th>
+                            <th>QR Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                     {% for product in products[:10] %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="product-check" value="{{ product[0] }}">
+                            </td>
+                            <td><code>{{ product[0] }}</code></td>
+                            <td>{{ product[1] }}</td>
+                            <td>
+                                <span class="badge bg-secondary">Not Generated</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-success" 
+                                        onclick="generateSingleQR('{{ product[0] }}', '{{ product[1] }}')">
+                                    <i class="bi bi-qr-code"></i> Generate
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-3">
+                <button class="btn btn-success" onclick="generateBulkQR()">
+                    <i class="bi bi-qr-code-scan me-2"></i>Generate Selected QR Codes
+                </button>
+                <button class="btn btn-outline-secondary ms-2" onclick="clearSelection()">
+                    <i class="bi bi-x-circle me-2"></i>Clear Selection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Usage Instructions -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle text-info me-2"></i>How to Use QR Codes
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <div class="bg-light rounded-circle p-3 d-inline-block mb-2">
+                            <i class="bi bi-printer text-success fs-4"></i>
+                        </div>
+                        <h6>Print & Attach</h6>
+                        <p class="small text-muted mb-0">Print QR codes and attach to physical products</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <div class="bg-light rounded-circle p-3 d-inline-block mb-2">
+                            <i class="bi bi-phone text-success fs-4"></i>
+                        </div>
+                        <h6>Customer Scans</h6>
+                        <p class="small text-muted mb-0">Customers scan with phone camera</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <div class="bg-light rounded-circle p-3 d-inline-block mb-2">
+                            <i class="bi bi-globe text-success fs-4"></i>
+                        </div>
+                        <h6>View Details</h6>
+                        <p class="small text-muted mb-0">Automatically opens product page on your site</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-lightbulb me-2"></i>
+                <strong>Tip:</strong> Place QR codes on product packaging, store displays, or marketing materials to allow customers to instantly access nutritional information.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk QR Modal -->
+<div class="modal fade" id="bulkQRModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Bulk QR Codes</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="bulkQRCodes"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="downloadAllQR()">
+                    <i class="bi bi-download me-2"></i>Download All
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .product-item:hover {
+        background-color: #e8f5e9;
+        cursor: pointer;
+    }
+    .product-item.active {
+        background-color: #198754;
+        color: white;
+    }
+    .product-item.active .text-muted {
+        color: rgba(255,255,255,0.8) !important;
+    }
+    .product-item.active .badge {
+        background-color: white !important;
+        color: #198754 !important;
+    }
+    #qrPreview img {
+        max-width: 300px;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 10px;
+        background: white;
+    }
+</style>
+
+<script>
+    let selectedProductId = null;
+    let selectedProductName = null;
+    let currentQRCode = null;
+    
+    // Product search
+    document.getElementById('productSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const items = document.querySelectorAll('.product-item');
+        
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+    
+    // Product selection
+    document.querySelectorAll('.product-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all items
+            document.querySelectorAll('.product-item').forEach(i => {
+                i.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            this.classList.add('active');
+            
+            // Store selected product
+            selectedProductId = this.dataset.id;
+            selectedProductName = this.dataset.name;
+            
+            // Enable generate button
+            document.getElementById('generateBtn').disabled = false;
+        });
+    });
+    
+    // Generate QR code for selected product
+    function generateSelectedQR() {
+        if (!selectedProductId) return;
+        generateSingleQR(selectedProductId, selectedProductName);
+    }
+    
+    // Generate single QR code
+    function generateSingleQR(productId, productName) {
+        fetch(`/admin/generate-qr/${productId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                // Store QR code data
+                currentQRCode = data.qr_code;
+                
+                // Update preview
+                document.getElementById('qrPreview').innerHTML = `
+                    <img src="data:image/png;base64,${data.qr_code}" 
+                         class="img-fluid" id="qrImage">
+                `;
+                
+                // Update details
+                document.getElementById('qrDetails').style.display = 'block';
+                document.getElementById('productNameDisplay').textContent = productName;
+                document.getElementById('productIdDisplay').textContent = productId;
+                
+                // Show action buttons
+                document.getElementById('actionButtons').style.display = 'flex';
+                
+                // Update product list item with generated status
+                document.querySelectorAll('.product-item').forEach(item => {
+                    if (item.dataset.id === productId) {
+                        const badge = item.querySelector('.badge');
+                        if (badge) {
+                            badge.className = 'badge bg-info';
+                            badge.textContent = 'QR Generated';
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to generate QR code');
+            });
+    }
+    
+    // Download QR code
+    function downloadQR() {
+        if (!currentQRCode) return;
+        
+        const link = document.createElement('a');
+        link.href = `data:image/png;base64,${currentQRCode}`;
+        link.download = `qr_${selectedProductId}_${selectedProductName.replace(/\s+/g, '_')}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    // Print QR code
+    function printQR() {
+        if (!currentQRCode) return;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>QR Code: ${selectedProductName}</title>
+                    <style>
+                        body { text-align: center; padding: 50px; }
+                        img { max-width: 400px; }
+                        h2 { margin-bottom: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h2>${selectedProductName}</h2>
+                    <p>ID: ${selectedProductId}</p>
+                    <img src="data:image/png;base64,${currentQRCode}">
+                    <p><small>Nutrition Scanner - ${new Date().toLocaleDateString()}</small></p>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+    }
+    
+    // Share QR code
+    function shareQR() {
+        if (!currentQRCode) return;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: `QR Code: ${selectedProductName}`,
+                text: `Scan this QR code to view ${selectedProductName} details on Nutrition Scanner`,
+                url: window.location.href
+            });
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(`${window.location.origin}/p/${selectedProductId}`)
+                .then(() => alert('Product link copied to clipboard!'))
+                .catch(err => alert('Failed to copy link'));
+        }
+    }
+    
+    // Bulk QR generation
+    document.getElementById('selectAll').addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.product-check');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+    
+    function clearSelection() {
+        document.querySelectorAll('.product-check').forEach(cb => cb.checked = false);
+        document.getElementById('selectAll').checked = false;
+    }
+    
+    function generateBulkQR() {
+        const selected = [];
+        document.querySelectorAll('.product-check:checked').forEach(cb => {
+            const row = cb.closest('tr');
+            const productId = cb.value;
+            const productName = row.cells[2].textContent;
+            selected.push({id: productId, name: productName});
+        });
+        
+        if (selected.length === 0) {
+            alert('Please select at least one product');
+            return;
+        }
+        
+        // Clear previous QR codes
+        document.getElementById('bulkQRCodes').innerHTML = '';
+        
+        // Generate QR codes
+        selected.forEach((product, index) => {
+            fetch(`/admin/generate-qr/${product.id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.error) {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4 mb-3';
+                        col.innerHTML = `
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <img src="data:image/png;base64,${data.qr_code}" 
+                                         class="img-fluid mb-2" style="max-width: 150px;">
+                                    <h6 class="mb-1">${product.name}</h6>
+                                    <small class="text-muted">${product.id}</small>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('bulkQRCodes').appendChild(col);
+                    }
+                });
+        });
+        
+        // Show modal
+        new bootstrap.Modal(document.getElementById('bulkQRModal')).show();
+    }
+    
+    function downloadAllQR() {
+        alert('In a real application, this would download a ZIP file containing all QR codes.');
+        // Implementation would involve creating a ZIP file on server side
+    }
+</script>
+{% endblock %}

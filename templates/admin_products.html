@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% block title %}Manage Products - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold text-success">
+                <i class="bi bi-basket me-2"></i>Manage Products
+            </h1>
+            <p class="text-muted">Add, edit, and manage products in the database</p>
+        </div>
+        <div>
+            <a href="/admin" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Dashboard
+            </a>
+            <a href="#addProductModal" class="btn btn-success" data-bs-toggle="modal">
+                <i class="bi bi-plus-circle"></i> Add Product
+            </a>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">All Products ({{ products|length }})</h5>
+            <div class="input-group" style="width: 300px;">
+                <input type="text" id="searchProducts" class="form-control" placeholder="Search products...">
+                <button class="btn btn-outline-secondary" type="button">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Product Name</th>
+                            <th>Calories</th>
+                            <th>Sugar (g)</th>
+                            <th>Fat (g)</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td><code>{{ product[0] }}</code></td>
+                            <td>
+                                <strong>{{ product[1] }}</strong>
+                                {% if product[7] %}
+                                <br><small class="text-danger">{{ product[7] }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ product[2] }} kcal</td>
+                            <td>{{ product[3] }}g</td>
+                            <td>{{ product[4] }}g</td>
+                            <td>
+                                {% if product[8] == 1 %}
+                                <span class="badge bg-success">Healthy</span>
+                                {% else %}
+                                <span class="badge bg-danger">Risky</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="/p/{{ product[0] }}" class="btn btn-outline-info" target="_blank">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="/admin/edit-product/{{ product[0] }}" class="btn btn-outline-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="/admin/delete-product/{{ product[0] }}" 
+                                       class="btn btn-outline-danger" 
+                                       onclick="return confirm('Delete {{ product[1] }}?')">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    <a href="/admin/generate-qr/{{ product[0] }}" 
+                                       class="btn btn-outline-success"
+                                       onclick="generateQR('{{ product[0] }}', '{{ product[1] }}'); return false;">
+                                        <i class="bi bi-qr-code"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                No products found. <a href="#addProductModal" data-bs-toggle="modal">Add your first product</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="text-success">{{ products|length }}</h3>
+                    <p class="text-muted mb-0">Total Products</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="text-success">{{ products|selectattr('8', 'equalto', 1)|list|length }}</h3>
+                    <p class="text-muted mb-0">Healthy Products</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="text-danger">{{ products|selectattr('8', 'equalto', 0)|list|length }}</h3>
+                    <p class="text-muted mb-0">Risky Products</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="text-info">{{ (products|map(attribute=2)|sum)|int }}</h3>
+                    <p class="text-muted mb-0">Total Calories</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Product
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/admin/add-product" method="POST">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Product ID *</label>
+                            <input type="text" class="form-control" name="id" required 
+                                   placeholder="e.g., PROD001" pattern="[A-Za-z0-9]+">
+                            <small class="form-text text-muted">Unique identifier (letters/numbers only)</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Product Name *</label>
+                            <input type="text" class="form-control" name="name" required 
+                                   placeholder="e.g., Apple">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Calories *</label>
+                            <input type="number" class="form-control" name="calories" required 
+                                   min="0" max="2000" placeholder="52">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sugar (g) *</label>
+                            <input type="number" step="0.1" class="form-control" name="sugar" required 
+                                   min="0" max="100" placeholder="10.4">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Fat (g) *</label>
+                            <input type="number" step="0.1" class="form-control" name="fat" required 
+                                   min="0" max="100" placeholder="0.2">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Protein (g) *</label>
+                            <input type="number" step="0.1" class="form-control" name="protein" required 
+                                   min="0" max="100" placeholder="0.3">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sodium (mg) *</label>
+                            <input type="number" step="0.1" class="form-control" name="sodium" required 
+                                   min="0" max="5000" placeholder="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Chemical Additives</label>
+                            <input type="text" class="form-control" name="chemicals" 
+                                   placeholder="e.g., Artificial Sweetener">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_healthy" id="isHealthy" checked>
+                                <label class="form-check-label" for="isHealthy">
+                                    Mark as Healthy Product
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="qrModalTitle">QR Code</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qrCodeContainer"></div>
+                <div id="qrInfo" class="mt-3"></div>
+                <a id="qrDownloadLink" class="btn btn-outline-success mt-3" style="display: none;">
+                    <i class="bi bi-download me-2"></i>Download QR Code
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table th {
+        font-weight: 600;
+        background-color: #f8f9fa;
+    }
+    .btn-group .btn {
+        border-radius: 5px !important;
+        margin: 2px;
+    }
+</style>
+
+<script>
+    // Product search functionality
+    document.getElementById('searchProducts').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#productsTable tbody tr');
+        
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+    
+    // Generate QR code
+    function generateQR(productId, productName) {
+        fetch(`/admin/generate-qr/${productId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                // Update modal title
+                document.getElementById('qrModalTitle').textContent = `QR Code: ${productName}`;
+                
+                // Display QR code
+                document.getElementById('qrCodeContainer').innerHTML = `
+                    <img src="data:image/png;base64,${data.qr_code}" 
+                         class="img-fluid" style="max-width: 300px;">
+                `;
+                
+                // Display info
+                document.getElementById('qrInfo').innerHTML = `
+                    <p><strong>Product:</strong> ${productName}</p>
+                    <p><strong>ID:</strong> ${productId}</p>
+                    <p><small class="text-muted">Scan this QR code to view product details</small></p>
+                `;
+                
+                // Setup download link
+                const downloadLink = document.getElementById('qrDownloadLink');
+                downloadLink.href = `data:image/png;base64,${data.qr_code}`;
+                downloadLink.download = `qr_${productId}.png`;
+                downloadLink.style.display = 'inline-block';
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('qrModal')).show();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to generate QR code');
+            });
+    }
+    
+    // Auto-generate ID from name
+    document.querySelector('input[name="name"]')?.addEventListener('input', function() {
+        const nameInput = this.value;
+        const idInput = document.querySelector('input[name="id"]');
+        
+        if (idInput && !idInput.value) {
+            // Generate ID from name (first 3 letters + 3 digits)
+            const prefix = nameInput.substring(0, 3).toUpperCase();
+            const randomNum = Math.floor(Math.random() * 900) + 100;
+            idInput.value = prefix + randomNum;
+        }
+    });
+</script>
+{% endblock %}
