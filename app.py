@@ -13,7 +13,7 @@ import urllib.parse
 import re
 
 app = Flask(__name__, template_folder='templates')
-app.secret_key = 'nutrition-scanner-secret-key-2024'  # Change in production
+app.secret_key = os.environ.get('SECRET_KEY', 'nutrition-scanner-secret-key-2024')
 
 # Initialize database
 import database
@@ -629,20 +629,8 @@ def generate_product_qr(product_id):
         border=4,
     )
     
-    # Get local IP address for QR code
-    import socket
-    def get_local_ip():
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(("8.8.8.8", 80))
-            ip = s.getsockname()[0]
-            s.close()
-            return ip
-        except:
-            return "localhost"
-    
-    local_ip = get_local_ip()
-    base_url = f"http://{local_ip}:5000"
+    # Use Render URL for QR codes so anyone can scan them
+    base_url = "https://nutrition-scanner.onrender.com"
     product_url = f"{base_url}/p/{product_id}"
     qr.add_data(product_url)
     qr.make(fit=True)
