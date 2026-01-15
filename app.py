@@ -13,7 +13,8 @@ import urllib.parse
 import re
 
 app = Flask(__name__, template_folder='templates')
-app.secret_key = os.environ.get('SECRET_KEY', 'nutrition-scanner-secret-key-2024')
+import os
+app.secret_key = os.environ.get('SECRET_KEY', 'nutrition-scanner-secret-key-2024') # Change in production
 
 # Initialize database
 import database
